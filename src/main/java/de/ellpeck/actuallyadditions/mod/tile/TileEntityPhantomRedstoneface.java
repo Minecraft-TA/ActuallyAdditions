@@ -10,12 +10,13 @@
 
 package de.ellpeck.actuallyadditions.mod.tile;
 
-import java.util.Arrays;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
+
+import java.util.Arrays;
 
 public class TileEntityPhantomRedstoneface extends TileEntityPhantomface {
 
@@ -48,6 +49,11 @@ public class TileEntityPhantomRedstoneface extends TileEntityPhantomface {
         }
 
         super.updateEntity();
+    }
+
+    @Override
+    protected boolean isValidTarget(TileEntity tile) {
+        return tile != null;
     }
 
     @Override

@@ -24,15 +24,15 @@ public class TileEntityPhantomLiquiface extends TileEntityPhantomface implements
     }
 
     @Override
-    public boolean isBoundThingInRange() {
-        if (super.isBoundThingInRange()) {
-            TileEntity tile = this.world.getTileEntity(this.boundPosition);
-            if (tile != null && !(tile instanceof TileEntityLaserRelayFluids)) {
-                for (EnumFacing facing : EnumFacing.values()) {
-                    if (tile.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, facing)) { return true; }
-                }
-            }
+    protected boolean isValidTarget(TileEntity tile) {
+        if (tile == null || tile instanceof TileEntityLaserRelayFluids)
+            return false;
+
+        for (EnumFacing facing : EnumFacing.VALUES) {
+            if (tile.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, facing))
+                return true;
         }
+
         return false;
     }
 

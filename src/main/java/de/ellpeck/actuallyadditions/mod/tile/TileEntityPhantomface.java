@@ -14,7 +14,6 @@ import de.ellpeck.actuallyadditions.api.tile.IPhantomTile;
 import de.ellpeck.actuallyadditions.mod.blocks.BlockPhantom;
 import de.ellpeck.actuallyadditions.mod.blocks.InitBlocks;
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -34,7 +33,7 @@ public abstract class TileEntityPhantomface extends TileEntityInventoryBase impl
     private int rangeBefore;
     private BlockPos boundPosBefore;
     private Block boundBlockBefore;
-    private int lastStrength;
+    private boolean isBoundThingInRange;
 
     public TileEntityPhantomface(String name) {
         super(0, name);
@@ -85,26 +84,34 @@ public abstract class TileEntityPhantomface extends TileEntityInventoryBase impl
     public void updateEntity() {
         super.updateEntity();
         if (!this.world.isRemote) {
-            this.range = upgradeRange(RANGE, this.world, this.getPos());
+            if (this.ticksElapsed % 20 == 0)
+                this.range = upgradeRange(RANGE, this.world, this.getPos());
 
-            if (!this.hasBoundPosition()) {
-                this.boundPosition = null;
-            }
+            updateBoundPosition();
 
             if (this.doesNeedUpdateSend()) {
                 this.onUpdateSent();
             }
-
-            int strength = this.getComparatorStrength();
-            if (this.lastStrength != strength) {
-                this.lastStrength = strength;
-
-                this.markDirty();
-            }
         } else {
+            updateBoundPosition();
             if (this.boundPosition != null) {
                 this.renderParticles();
             }
+        }
+    }
+
+    private void updateBoundPosition() {
+        if (!hasBoundPosition())
+            return;
+
+        TileEntity target = this.world.getTileEntity(this.boundPosition);
+        if (target instanceof IPhantomTile) {
+            this.boundPosition = null;
+            this.isBoundThingInRange = false;
+        } else if (!isValidTarget(target)) {
+            this.isBoundThingInRange = false;
+        } else {
+            this.isBoundThingInRange = this.boundPosition.distanceSq(this.getPos()) <= this.range * this.range;
         }
     }
 
@@ -127,14 +134,7 @@ public abstract class TileEntityPhantomface extends TileEntityInventoryBase impl
 
     @Override
     public boolean hasBoundPosition() {
-        if (this.boundPosition != null) {
-            if (this.world.getTileEntity(this.boundPosition) instanceof IPhantomTile || this.getPos().getX() == this.boundPosition.getX() && this.getPos().getY() == this.boundPosition.getY() && this.getPos().getZ() == this.boundPosition.getZ()) {
-                this.boundPosition = null;
-                return false;
-            }
-            return true;
-        }
-        return false;
+        return this.boundPosition != null;
     }
 
     @SideOnly(Side.CLIENT)
@@ -154,7 +154,7 @@ public abstract class TileEntityPhantomface extends TileEntityInventoryBase impl
 
     @Override
     public boolean isBoundThingInRange() {
-        return this.hasBoundPosition() && this.boundPosition.distanceSq(this.getPos()) <= this.range * this.range;
+        return this.isBoundThingInRange;
     }
 
     @Override
@@ -179,11 +179,13 @@ public abstract class TileEntityPhantomface extends TileEntityInventoryBase impl
 
     protected abstract boolean isCapabilitySupported(Capability<?> capability);
 
+    protected abstract boolean isValidTarget(TileEntity tile);
+
     @Override
     public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
         if (this.isBoundThingInRange() && this.isCapabilitySupported(capability)) {
             TileEntity tile = this.world.getTileEntity(this.getBoundPosition());
-            if (tile != null) { return tile.hasCapability(capability, facing); }
+            if (tile != null) {return tile.hasCapability(capability, facing);}
         }
         return super.hasCapability(capability, facing);
     }
@@ -192,19 +194,13 @@ public abstract class TileEntityPhantomface extends TileEntityInventoryBase impl
     public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
         if (this.isBoundThingInRange() && this.isCapabilitySupported(capability)) {
             TileEntity tile = this.world.getTileEntity(this.getBoundPosition());
-            if (tile != null) { return tile.getCapability(capability, facing); }
+            if (tile != null) {return tile.getCapability(capability, facing);}
         }
         return super.getCapability(capability, facing);
     }
 
     @Override
     public int getComparatorStrength() {
-        if (this.isBoundThingInRange()) {
-            BlockPos pos = this.getBoundPosition();
-            IBlockState state = this.world.getBlockState(pos);
-
-            if (state.hasComparatorInputOverride()) { return state.getComparatorInputOverride(this.world, pos); }
-        }
         return 0;
     }
 }

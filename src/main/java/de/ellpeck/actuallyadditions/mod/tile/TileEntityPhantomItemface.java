@@ -31,15 +31,15 @@ public class TileEntityPhantomItemface extends TileEntityPhantomface {
     }
 
     @Override
-    public boolean isBoundThingInRange() {
-        if (super.isBoundThingInRange()) {
-            TileEntity tile = this.world.getTileEntity(this.getBoundPosition());
-            if (tile != null) {
-                for (EnumFacing facing : EnumFacing.values()) {
-                    if (tile.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, facing)) { return true; }
-                }
-            }
+    protected boolean isValidTarget(TileEntity tile) {
+        if (tile == null)
+            return false;
+
+        for (EnumFacing facing : EnumFacing.VALUES) {
+            if (tile.hasCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, facing))
+                return true;
         }
+
         return false;
     }
 

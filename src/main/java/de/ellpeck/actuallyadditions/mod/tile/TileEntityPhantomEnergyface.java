@@ -24,15 +24,15 @@ public class TileEntityPhantomEnergyface extends TileEntityPhantomface implement
     }
 
     @Override
-    public boolean isBoundThingInRange() {
-        if (super.isBoundThingInRange()) {
-            TileEntity tile = this.world.getTileEntity(this.boundPosition);
-            if (tile != null && !(tile instanceof TileEntityLaserRelayEnergy)) {
-                for (EnumFacing facing : EnumFacing.values()) {
-                    if (tile.hasCapability(CapabilityEnergy.ENERGY, facing)) { return true; }
-                }
-            }
+    protected boolean isValidTarget(TileEntity tile) {
+        if (tile == null || tile instanceof TileEntityLaserRelayEnergy)
+            return false;
+
+        for (EnumFacing facing : EnumFacing.VALUES) {
+            if (tile.hasCapability(CapabilityEnergy.ENERGY, facing))
+                return true;
         }
+
         return false;
     }
 
