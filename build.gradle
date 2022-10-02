@@ -28,7 +28,7 @@ minecraft {
     mappings = "stable_39"
     makeObfSourceJar = false
     replaceIn "ActuallyAdditions.java"
-    replace "@VERSION@", version.toString()
+    replace "@VERSION@", project.version.toString()
 }
 
 repositories {
