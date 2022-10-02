@@ -153,6 +153,13 @@ public abstract class TileEntityPhantomface extends TileEntityInventoryBase impl
     }
 
     @Override
+    public void markDirty() {
+        if (this.world != null) {
+            this.world.markChunkDirty(this.pos, this);
+        }
+    }
+
+    @Override
     public boolean isBoundThingInRange() {
         return this.isBoundThingInRange;
     }
